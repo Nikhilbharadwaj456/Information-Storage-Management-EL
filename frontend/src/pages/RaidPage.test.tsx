@@ -19,10 +19,28 @@ vi.mock('../services/api', () => ({
         array_state: 'Degraded',
         failed_disks: [0],
         rebuild_time_hours: 1,
+        data_to_rebuild_tb: 1,
+        rebuild_throughput_mb_s: 200,
         hot_spare_active: false,
+        data_accessible: true,
+        remaining_fault_tolerance: '0 disks',
+        write_penalty: 4,
+        comparison: [
+          { RAID: 'RAID 0', 'Capacity (TB)': 4, 'Efficiency (%)': 100, 'Fault Tolerance': '0', Characteristic: 'Performance', 'Write penalty': 1 },
+          { RAID: 'RAID 5', 'Capacity (TB)': 3, 'Efficiency (%)': 75, 'Fault Tolerance': '1', Characteristic: 'Balanced', 'Write penalty': 4 },
+        ],
         layout: [{ Stripe: 1, 'Disk 1': 'FAILED', 'Disk 2': 'D1.1' }],
-        xor_example: { a: '1010', b: '1100', c: '0110', parity: '0000', recovered_c: '0110' },
         assumptions: ['Logical RAID simulation'],
+      }
+    }
+    if (path === '/api/raid/xor') {
+      return {
+        blocks: { A: '1010', B: '1100', C: '0110' },
+        parity: '0000',
+        missing: 'C',
+        recovered: '0110',
+        verified: true,
+        survivors: ['A', 'B'],
       }
     }
     return {}
@@ -37,9 +55,19 @@ describe('RAID simulator page', () => {
     fireEvent.click(screen.getByRole('button', { name: /Calculate and simulate/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('3.00 TB')).toBeInTheDocument()
+      expect(screen.getAllByText('3.00 TB').length).toBeGreaterThan(0)
       expect(screen.getByText('Degraded')).toBeInTheDocument()
     })
+  })
+
+  it('shows the comparison table and recovers a missing XOR block', async () => {
+    render(<RaidPage />)
+    fireEvent.click(screen.getByRole('button', { name: /Calculate and simulate/i }))
+    await waitFor(() => expect(screen.getByText('RAID level comparison')).toBeInTheDocument())
+    expect(screen.getByText('4 I/Os per write', { selector: 'td' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Calculate and recover/i }))
+    await waitFor(() => expect(screen.getByText('Matches the original')).toBeInTheDocument())
   })
 
   it('allows failed disks to be toggled', () => {

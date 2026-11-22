@@ -16,6 +16,7 @@ vi.mock('../services/api', () => ({
         utilization_percent: 81.9,
         response_time_ms: 45.3,
         requests_in_system: 4.53,
+        queue_length: 3.7,
         response_curve: [{ 'Utilization (%)': 5, 'Average response time (ms)': 8.6 }],
         assumptions: ['M/M/1 model'],
       }

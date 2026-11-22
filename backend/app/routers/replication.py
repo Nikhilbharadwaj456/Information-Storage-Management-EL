@@ -10,27 +10,17 @@ router = APIRouter(prefix="/api/replication", tags=["Replication"])
 
 @router.post("/compare")
 async def compare(request: ReplicationRequest) -> dict:
-    selected = replication_comparison(
-        request.mode,
+    args = (
         request.local_write_ms,
         request.network_round_trip_ms,
         request.bandwidth_mbps,
         request.write_frequency_iops,
+        request.distance_km,
+        request.write_size_kb,
     )
-    synchronous = replication_comparison(
-        "Synchronous",
-        request.local_write_ms,
-        request.network_round_trip_ms,
-        request.bandwidth_mbps,
-        request.write_frequency_iops,
-    )
-    asynchronous = replication_comparison(
-        "Asynchronous",
-        request.local_write_ms,
-        request.network_round_trip_ms,
-        request.bandwidth_mbps,
-        request.write_frequency_iops,
-    )
+    selected = replication_comparison(request.mode, *args)
+    synchronous = replication_comparison("Synchronous", *args)
+    asynchronous = replication_comparison("Asynchronous", *args)
     return {
         "selected": selected,
         "comparison": [synchronous, asynchronous],
@@ -41,6 +31,8 @@ async def compare(request: ReplicationRequest) -> dict:
         "assumptions": [
             "Synchronous writes wait for remote acknowledgement",
             "Asynchronous writes acknowledge locally without waiting",
+            "Signal propagation is 5 microseconds per km in each direction",
+            "Each write is sent as one transfer of the given size over the link",
         ],
         "explanation": replication_explanation(selected, request.mode),
     }

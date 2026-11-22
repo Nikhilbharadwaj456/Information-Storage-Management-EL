@@ -46,3 +46,26 @@ def test_xor_recovery():
 def test_rebuild_time():
     one_tb_mb = 1024 * 1024
     assert rebuild_time(1, one_tb_mb / 3600) == pytest.approx(1.0)
+
+
+def test_write_penalty_per_level():
+    penalties = {level: calculate_raid(level, 4, 1)["write_penalty"]
+                 for level in ("RAID 0", "RAID 1", "RAID 5", "RAID 6", "RAID 10")}
+    assert penalties == {"RAID 0": 1, "RAID 1": 2, "RAID 5": 4, "RAID 6": 6, "RAID 10": 2}
+
+
+def test_xor_demo_recovers_any_missing_block():
+    from modules.raid import xor_demo
+    blocks = {"A": 0b1010, "B": 0b1100, "C": 0b0110}
+    for name in blocks:
+        result = xor_demo(blocks, name)
+        assert result["parity"] == 0b0000
+        assert result["recovered"] == blocks[name]
+        assert result["verified"] is True
+
+
+def test_remaining_fault_tolerance():
+    from modules.raid import remaining_fault_tolerance
+    assert remaining_fault_tolerance("RAID 6", 5, {0}) == "1 disk"
+    assert remaining_fault_tolerance("RAID 5", 4, {0, 1}) == "0 disks"
+    assert remaining_fault_tolerance("RAID 0", 4, set()) == "0 disks"

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Copy, Download, RefreshCw, Trash2 } from 'lucide-react'
 
-import { apiRequest } from '../services/api'
+import { API_BASE_URL, apiRequest } from '../services/api'
 import { QuickStartGuide } from '../components/QuickStartGuide'
 
 type Scenario = {
@@ -62,7 +62,7 @@ export function ScenariosPage() {
   }
 
   const downloadCsv = () => {
-    window.open('http://127.0.0.1:8000/api/scenarios/export/csv', '_blank', 'noopener,noreferrer')
+    window.open(`${API_BASE_URL}/api/scenarios/export/csv`, '_blank', 'noopener,noreferrer')
   }
 
   const compare = async () => {

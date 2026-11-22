@@ -22,6 +22,7 @@ def calculate_disk(rpm: float, seek_ms: float, transfer_rate_mb_s: float,
 
     response_time_ms = service_time_ms / (1.0 - utilization)
     requests_in_system = arrival_iops * (response_time_ms / 1000.0)
+    queue_length = utilization ** 2 / (1.0 - utilization)
     return {
         "rotational_latency_ms": rotational_latency_ms,
         "transfer_time_ms": transfer_time_ms,
@@ -30,6 +31,7 @@ def calculate_disk(rpm: float, seek_ms: float, transfer_rate_mb_s: float,
         "utilization": utilization,
         "response_time_ms": response_time_ms,
         "requests_in_system": requests_in_system,
+        "queue_length": queue_length,
     }
 
 
@@ -93,7 +95,7 @@ def show_disk() -> None:
             title="Response Time vs Utilization",
             yaxis={"rangemode": "tozero"},
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         if result["utilization"] >= 0.8:
             st.warning("The disk is operating at high utilization; queueing delay will increase sharply.")

@@ -103,7 +103,7 @@ def show_backup() -> None:
             float(throughput), float(rpo), float(rto), interval,
         )
         st.subheader("Backup method comparison")
-        st.dataframe(comparison, use_container_width=True)
+        st.dataframe(comparison, width="stretch")
 
         chart = px.bar(
             comparison,
@@ -112,7 +112,7 @@ def show_backup() -> None:
             color="Strategy",
             title="Estimated Retained Storage",
         )
-        st.plotly_chart(chart, use_container_width=True)
+        st.plotly_chart(chart, width="stretch")
 
         rpo_status = "satisfies" if interval <= rpo else "does not satisfy"
         st.info(f"The selected backup interval is {interval:g} hours and {rpo_status} the RPO of {rpo:g} hours.")

@@ -138,3 +138,35 @@ def test_invalid_request_parameters():
         },
     )
     assert response.status_code == 422
+
+
+def test_failed_array_is_never_reported_as_rebuilding():
+    for level, failed in (("RAID 0", [1]), ("RAID 5", [0, 1])):
+        body = client.post("/api/raid/simulate-failure", json={
+            "raid_level": level, "disk_count": 4, "disk_size_tb": 1,
+            "failed_disks": failed, "hot_spare": True,
+        }).json()
+        assert body["array_state"] == "Failed"
+        assert body["hot_spare_active"] is False
+        assert body["data_accessible"] is False
+        assert body["rebuild_time_hours"] == 0
+
+
+def test_degraded_array_with_spare_rebuilds_failed_data():
+    body = client.post("/api/raid/simulate-failure", json={
+        "raid_level": "RAID 6", "disk_count": 5, "disk_size_tb": 2,
+        "failed_disks": [0, 3], "hot_spare": True, "rebuild_throughput_mb_s": 200,
+    }).json()
+    assert body["array_state"] == "Rebuilding"
+    assert body["data_to_rebuild_tb"] == 4
+    assert body["remaining_fault_tolerance"] == "0 disks"
+    assert [row["RAID"] for row in body["comparison"]] == ["RAID 0", "RAID 5", "RAID 6"]
+
+
+def test_xor_endpoint():
+    body = client.post("/api/raid/xor", json={"a": "1010", "b": "1100", "c": "0110", "missing": "B"}).json()
+    assert body["parity"] == "0000"
+    assert body["recovered"] == "1100"
+    assert body["verified"] is True
+    bad = client.post("/api/raid/xor", json={"a": "10a0", "b": "1100", "c": "0110", "missing": "A"})
+    assert bad.status_code == 422

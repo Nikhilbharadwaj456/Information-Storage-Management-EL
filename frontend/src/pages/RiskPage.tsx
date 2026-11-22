@@ -95,6 +95,7 @@ export function RiskPage() {
               <article className="interpretation-panel"><div><p className="eyebrow">Suggested mitigation</p><h2>{result.suggested_mitigation}</h2><p>{result.asset} · {result.threat} · {result.vulnerability}</p></div></article>
               <article className="panel">
                 <div className="panel-heading"><div><p className="eyebrow">1-5 risk matrix</p><h2>Likelihood × impact</h2></div></div>
+                <p className="layout-note">Columns: likelihood 1 → 5. Rows: impact 5 (top) → 1 (bottom). The highlighted cell is your selection.</p>
                 <div className="risk-grid" aria-label="Risk matrix">
                   {[5, 4, 3, 2, 1].map((row) => [1, 2, 3, 4, 5].map((column) => {
                     const score = row * column

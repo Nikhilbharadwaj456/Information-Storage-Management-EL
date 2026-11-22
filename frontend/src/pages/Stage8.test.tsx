@@ -9,10 +9,10 @@ vi.mock('../services/api', () => ({
   apiRequest: vi.fn(async (path: string) => {
     if (path === '/api/replication/compare') {
       return {
-        selected: { mode: 'Synchronous', response_ms: 22, lag_ms: 0, data_loss: 'Near zero' },
+        selected: { mode: 'Synchronous', response_ms: 22, lag_ms: 0, rpo_ms: 0, propagation_rtt_ms: 1, total_rtt_ms: 20, transmit_ms: 0.07, link_utilization_percent: 3.3, data_loss: 'Near zero' },
         comparison: [
-          { mode: 'Synchronous', response_ms: 22, lag_ms: 0, data_loss: 'Near zero' },
-          { mode: 'Asynchronous', response_ms: 2, lag_ms: 20.5, data_loss: 'Lag window' },
+          { mode: 'Synchronous', response_ms: 22, lag_ms: 0, rpo_ms: 0, propagation_rtt_ms: 1, total_rtt_ms: 20, transmit_ms: 0.07, link_utilization_percent: 3.3, data_loss: 'Near zero' },
+          { mode: 'Asynchronous', response_ms: 2, lag_ms: 20.5, rpo_ms: 20.5, propagation_rtt_ms: 1, total_rtt_ms: 20, transmit_ms: 0.07, link_utilization_percent: 3.3, data_loss: 'Lag window' },
         ],
         assumptions: ['Simplified acknowledgement model'],
       }

@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 
 from backend.app.routers import (
     raid,
+    raid_array,
     disk,
     backup,
     replication,
@@ -53,6 +54,7 @@ async def health() -> dict:
 
 
 app.include_router(raid.router)
+app.include_router(raid_array.router)
 app.include_router(disk.router)
 app.include_router(backup.router)
 app.include_router(replication.router)

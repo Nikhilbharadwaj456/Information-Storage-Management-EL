@@ -16,6 +16,13 @@ class RaidFailureRequest(BaseModel):
     rebuild_throughput_mb_s: float = Field(default=200.0, gt=0)
 
 
+class XorRequest(BaseModel):
+    a: str = Field(max_length=16)
+    b: str = Field(max_length=16)
+    c: str = Field(max_length=16)
+    missing: str = Field(pattern=r"^(A|B|C)$")
+
+
 class DiskRequest(BaseModel):
     rpm: float = Field(gt=0, le=30000)
     seek_ms: float = Field(ge=0)
@@ -40,6 +47,8 @@ class ReplicationRequest(BaseModel):
     network_round_trip_ms: float = Field(ge=0)
     bandwidth_mbps: float = Field(gt=0)
     write_frequency_iops: float = Field(ge=0)
+    distance_km: float = Field(default=0.0, ge=0, le=20000)
+    write_size_kb: float = Field(default=8.0, gt=0)
 
 
 class RiskRequest(BaseModel):

@@ -115,11 +115,11 @@ export function BackupPage() {
                   <div className="panel-heading"><div><p className="eyebrow">Retained storage</p><h2>Storage comparison</h2></div></div>
                   <div className="chart-wrap">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={result.strategies}>
+                      <BarChart data={result.strategies} margin={{ top: 10, right: 8 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="Strategy" /><YAxis tickFormatter={(v) => `${v} GB`} />
+                        <XAxis dataKey="Strategy" /><YAxis width={72} tickFormatter={(v) => `${v} GB`} />
                         <Tooltip formatter={(v) => [`${Number(v).toFixed(1)} GB`, 'Storage']} />
-                        <Bar dataKey="Storage (GB)" fill="#5b72ee" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="Storage (GB)" fill="#6366f1" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -136,7 +136,7 @@ export function BackupPage() {
                 <div className="panel-heading"><div><p className="eyebrow">Strategy details</p><h2>Backup and restore comparison</h2></div></div>
                 <div className="layout-table-wrap">
                   <table className="layout-table backup-table">
-                    <thead><tr><th>Strategy</th><th>Storage</th><th>Backup</th><th>Restore</th><th>Steps</th><th>RPO</th><th>RTO</th></tr></thead>
+                    <thead><tr><th>Strategy</th><th>Storage retained</th><th>Backup window</th><th>Restore time</th><th>Data restored</th><th>Restore steps</th><th>RPO</th><th>RTO</th></tr></thead>
                     <tbody>
                       {result.strategies.map((item) => (
                         <tr key={item.Strategy}>
@@ -144,6 +144,7 @@ export function BackupPage() {
                           <td>{item['Storage (GB)'].toFixed(1)} GB</td>
                           <td>{item['Backup duration (hours)'].toFixed(2)} h</td>
                           <td>{item['Restore duration (hours)'].toFixed(2)} h</td>
+                          <td>{item['Restore data (GB)'].toFixed(1)} GB</td>
                           <td>{item['Recovery steps']}</td>
                           <td><span className={`compliance ${item['RPO compliant'] === 'Yes' ? 'pass' : 'fail'}`}>{item['RPO compliant']}</span></td>
                           <td><span className={`compliance ${item['RTO compliant'] === 'Yes' ? 'pass' : 'fail'}`}>{item['RTO compliant']}</span></td>
@@ -152,6 +153,11 @@ export function BackupPage() {
                     </tbody>
                   </table>
                 </div>
+                <p className="layout-note">
+                  Restore steps: Full restores 1 backup. Incremental restores the full backup, then every incremental in order.
+                  Differential restores the full backup plus only the latest differential.
+                  Backup window is the largest single backup in the retention period.
+                </p>
               </article>
               <article className="interpretation-panel"><div><p className="eyebrow">Recommendation</p><h2>{result.recommendation}</h2></div></article>
               <ExplanationPanel explanation={result.explanation} />

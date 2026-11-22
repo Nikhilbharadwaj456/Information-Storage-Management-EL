@@ -1,11 +1,14 @@
 from fastapi import APIRouter
 
-from backend.app.schemas import RaidCalculateRequest, RaidFailureRequest
+from backend.app.schemas import RaidCalculateRequest, RaidFailureRequest, XorRequest
 from modules.raid import (
     array_state,
     build_layout,
     calculate_raid,
+    raid_comparison,
     rebuild_time,
+    remaining_fault_tolerance,
+    xor_demo,
     xor_recover,
 )
 from modules.explainability import raid_explanation
@@ -53,18 +56,27 @@ async def simulate_failure(request: RaidFailureRequest) -> dict:
         request.disk_size_tb,
     )
     state = array_state(request.raid_level, request.disk_count, failed)
-    rebuilding = request.hot_spare and failed and state in ("Degraded", "Failed")
+    recoverable = bool(failed) and state == "Degraded"
+    rebuilding = request.hot_spare and recoverable
+    data_to_rebuild_tb = request.disk_size_tb * len(failed) if recoverable else 0.0
 
     rebuild_hours = rebuild_time(
-        request.disk_size_tb,
+        data_to_rebuild_tb,
         request.rebuild_throughput_mb_s,
-    ) if rebuilding or failed else 0.0
+    ) if recoverable else 0.0
     return {
         **base,
         "array_state": "Rebuilding" if rebuilding else state,
         "failed_disks": sorted(failed),
+        "data_accessible": state != "Failed",
+        "remaining_fault_tolerance": remaining_fault_tolerance(
+            request.raid_level, request.disk_count, failed,
+        ),
         "hot_spare_active": rebuilding,
+        "data_to_rebuild_tb": data_to_rebuild_tb,
+        "rebuild_throughput_mb_s": request.rebuild_throughput_mb_s,
         "rebuild_time_hours": rebuild_hours,
+        "comparison": raid_comparison(request.disk_count, request.disk_size_tb).to_dict(orient="records"),
         "layout": build_layout(
             request.raid_level,
             request.disk_count,
@@ -90,4 +102,23 @@ async def simulate_failure(request: RaidFailureRequest) -> dict:
             len(failed),
             rebuilding,
         ),
+    }
+
+
+@router.post("/xor")
+async def xor(request: XorRequest) -> dict:
+    blocks = {}
+    for name, value in (("A", request.a), ("B", request.b), ("C", request.c)):
+        if not value or any(bit not in "01" for bit in value):
+            raise ValueError(f"Block {name} must be a binary value such as 1010.")
+        blocks[name] = int(value, 2)
+    width = max(len(request.a), len(request.b), len(request.c))
+    result = xor_demo(blocks, request.missing)
+    return {
+        "blocks": {name: format(value, f"0{width}b") for name, value in blocks.items()},
+        "parity": format(result["parity"], f"0{width}b"),
+        "missing": result["missing"],
+        "recovered": format(result["recovered"], f"0{width}b"),
+        "verified": result["verified"],
+        "survivors": [name for name in blocks if name != request.missing],
     }

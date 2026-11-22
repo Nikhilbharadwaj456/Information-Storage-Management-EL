@@ -1,27 +1,38 @@
-# Stage 10 Verification Record
+# Final Verification Record
 
 Verification date: 2026-11-22
 
 ## Application Status
 
 - FastAPI health endpoint: healthy
-- React frontend: HTTP 200
-- Backend/calculation tests: 31 passed
-- Frontend component tests: 9 passed
-- Frontend production build: successful
+- React frontend: HTTP 200, production build successful, TypeScript check clean
+- Python tests (calculations, live RAID engine, API): 65 passed
+- Frontend component tests: 11 passed
+- Streamlit interface: all six pages load without errors
 - API documentation: available at `/docs`
-- Browser screenshots: captured in `screenshots/`
+- Every page checked at desktop width (light and dark theme) and phone width (390 px): no horizontal scrolling and no browser console errors
+
+## Demonstration Checks (live RAID array, run against the API)
+
+- RAID 5, 4 disks: parity rotates across disks
+- Fail one disk: array Degraded, degraded read SHA-256 matches the original
+- Rebuild onto hot spare: array Healthy, SHA-256 matches
+- RAID 5 with two failed disks: data loss reported, rebuild refused
+- RAID 6 with two failed disks: SHA-256 still matches
 
 ## Captured Screenshots
 
 - `screenshots/01-home.png`
 - `screenshots/02-raid.png`
-- `screenshots/02-disk.png`
-- `screenshots/02-backup.png`
-- `screenshots/02-replication.png`
-- `screenshots/02-risk.png`
-- `screenshots/02-scenarios.png`
-- `screenshots/02-methodology.png`
+- `screenshots/03-raid-live-array.png`
+- `screenshots/04-disk.png`
+- `screenshots/05-backup.png`
+- `screenshots/06-replication.png`
+- `screenshots/07-risk.png`
+- `screenshots/08-scenarios.png`
+- `screenshots/09-methodology.png`
+- `screenshots/10-raid-live-array-dark.png`
+- `screenshots/11-raid-phone.png`
 
 ## Local Demo URLs
 
@@ -32,10 +43,4 @@ Verification date: 2026-11-22
 
 ## Docker Status
 
-Docker configuration files have been created, but Docker Desktop was not available in the current environment. Docker remains optional for the local application.
-
-## Final Gate Status
-
-- The Methodology route now documents module models and limitations.
-- Scenario selection calls the scenario comparison API and displays a side-by-side table.
-- PDF export remains optional and was not required for the local implementation gate.
+Docker configuration files are included but were not run in this environment. Docker remains optional for the local application.

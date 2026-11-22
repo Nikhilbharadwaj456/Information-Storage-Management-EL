@@ -1,7 +1,18 @@
-import { Moon, Sun } from 'lucide-react'
-import { CircleHelp } from 'lucide-react'
+import {
+  Activity,
+  BookOpen,
+  CircleHelp,
+  Database,
+  FlaskConical,
+  HardDrive,
+  LayoutGrid,
+  Moon,
+  ShieldCheck,
+  Sun,
+  Waypoints,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
+import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { HomePage } from './pages/HomePage'
 import { RaidPage } from './pages/RaidPage'
@@ -13,19 +24,21 @@ import { ScenariosPage } from './pages/ScenariosPage'
 import { MethodologyPage } from './pages/MethodologyPage'
 
 const navigation = [
-  { path: '/', label: 'Overview', short: 'OV' },
-  { path: '/raid', label: 'RAID Simulator', short: 'RA' },
-  { path: '/disk', label: 'Disk Performance', short: 'DP' },
-  { path: '/backup', label: 'Backup Planner', short: 'BP' },
-  { path: '/replication', label: 'Replication', short: 'RP' },
-  { path: '/risk', label: 'Risk Assessment', short: 'RS' },
-  { path: '/scenarios', label: 'Saved Experiments', short: 'EX' },
-  { path: '/methodology', label: 'Methodology', short: 'ME' },
+  { path: '/', label: 'Overview', icon: LayoutGrid },
+  { path: '/raid', label: 'RAID Simulator', icon: HardDrive },
+  { path: '/disk', label: 'Disk Performance', icon: Activity },
+  { path: '/backup', label: 'Backup Planner', icon: Database },
+  { path: '/replication', label: 'Replication', icon: Waypoints },
+  { path: '/risk', label: 'Risk Assessment', icon: ShieldCheck },
+  { path: '/scenarios', label: 'Saved Experiments', icon: FlaskConical },
+  { path: '/methodology', label: 'Methodology', icon: BookOpen },
 ]
 
 function App() {
   const [dark, setDark] = useState(() => localStorage.getItem('storagelab-theme') === 'dark')
   const navigate = useNavigate()
+  const location = useLocation()
+  const current = navigation.find((item) => item.path === location.pathname) ?? navigation[0]
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light'
@@ -51,7 +64,7 @@ function App() {
               end={item.path === '/'}
               className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
             >
-              <span className="nav-short">{item.short}</span>
+              <span className="nav-short"><item.icon size={17} strokeWidth={2} /></span>
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -66,8 +79,8 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div>
-            <p className="eyebrow">StorageLab workspace</p>
-            <strong>Information Storage Management</strong>
+            <p className="eyebrow">Information Storage Management</p>
+            <strong>{current.label}</strong>
           </div>
           <div className="topbar-actions">
             <button

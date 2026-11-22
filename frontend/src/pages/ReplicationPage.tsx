@@ -9,6 +9,11 @@ type ReplicationMode = {
   mode: string
   response_ms: number
   lag_ms: number
+  rpo_ms: number
+  propagation_rtt_ms: number
+  total_rtt_ms: number
+  transmit_ms: number
+  link_utilization_percent: number
   data_loss: string
 }
 
@@ -21,7 +26,9 @@ type ReplicationResult = {
 
 export function ReplicationPage() {
   const [mode, setMode] = useState('Synchronous')
-  const [latency, setLatency] = useState(20)
+  const [latency, setLatency] = useState(2)
+  const [distance, setDistance] = useState(100)
+  const [writeSize, setWriteSize] = useState(8)
   const [localWrite, setLocalWrite] = useState(2)
   const [bandwidth, setBandwidth] = useState(1000)
   const [frequency, setFrequency] = useState(500)
@@ -41,10 +48,13 @@ export function ReplicationPage() {
           network_round_trip_ms: latency,
           bandwidth_mbps: bandwidth,
           write_frequency_iops: frequency,
+          distance_km: distance,
+          write_size_kb: writeSize,
         }),
       })
       setResult(data)
     } catch (caught) {
+      setResult(null)
       setError(caught instanceof Error ? caught.message : 'Unable to compare replication modes.')
     }
   }
@@ -55,9 +65,9 @@ export function ReplicationPage() {
       await apiRequest('/api/scenarios', {
         method: 'POST',
         body: JSON.stringify({
-          name: `${mode} Replication - ${latency} ms RTT`,
+          name: `${mode} Replication - ${distance} km`,
           module_type: 'replication',
-          inputs: { mode, local_write_ms: localWrite, network_round_trip_ms: latency, bandwidth_mbps: bandwidth, write_frequency_iops: frequency },
+          inputs: { mode, local_write_ms: localWrite, network_round_trip_ms: latency, distance_km: distance, bandwidth_mbps: bandwidth, write_frequency_iops: frequency, write_size_kb: writeSize },
           results: result,
           assumptions: result.assumptions,
           tags: ['replication'],
@@ -79,13 +89,15 @@ export function ReplicationPage() {
         <aside className="control-panel">
           <QuickStartGuide steps={[
             { title: 'Choose a mode', description: 'Compare local acknowledgement with remote acknowledgement.' },
-            { title: 'Enter network details', description: 'Set RTT, bandwidth, local write time, and write frequency.' },
+            { title: 'Enter network details', description: 'Set distance, network latency, bandwidth, local write time, write size, and write frequency.' },
             { title: 'Compare', description: 'Balance response time against replication lag and data-loss risk.' },
           ]} />
           <label className="field"><span>Replication mode</span><select value={mode} onChange={(e) => setMode(e.target.value)}><option>Synchronous</option><option>Asynchronous</option></select></label>
-          <label className="field"><span>Network RTT (ms)</span><input type="number" min="0" value={latency} onChange={(e) => setLatency(Number(e.target.value))} /></label>
+          <label className="field"><span>Distance between sites (km)</span><input type="number" min="0" value={distance} onChange={(e) => setDistance(Number(e.target.value))} /></label>
+          <label className="field"><span>Network equipment latency, round trip (ms)</span><input type="number" min="0" step="0.1" value={latency} onChange={(e) => setLatency(Number(e.target.value))} /></label>
           <label className="field"><span>Local write (ms)</span><input type="number" min="0" value={localWrite} onChange={(e) => setLocalWrite(Number(e.target.value))} /></label>
           <label className="field"><span>Bandwidth (Mbps)</span><input type="number" min="0.1" value={bandwidth} onChange={(e) => setBandwidth(Number(e.target.value))} /></label>
+          <label className="field"><span>Write size (KB)</span><input type="number" min="0.5" value={writeSize} onChange={(e) => setWriteSize(Number(e.target.value))} /></label>
           <label className="field"><span>Write frequency (IOPS)</span><input type="number" min="0" value={frequency} onChange={(e) => setFrequency(Number(e.target.value))} /></label>
           <button type="button" className="calculate-button" onClick={calculate}><Waypoints size={17} /> Compare replication</button>
           {error && <div className="notice error-notice" role="alert">{error}</div>}
@@ -97,18 +109,28 @@ export function ReplicationPage() {
               <div className="metric-grid">
                 {result.comparison.map((item) => (
                   <article className="metric-card" key={item.mode}>
-                    <p>{item.mode}</p>
+                    <p>{item.mode} write response</p>
                     <strong>{item.response_ms.toFixed(2)} ms</strong>
-                    <small>{item.lag_ms.toFixed(2)} ms replication lag</small>
+                    <small>RPO {item.rpo_ms === 0 ? '0 (no data loss)' : `≈ ${item.rpo_ms.toFixed(2)} ms`}</small>
                   </article>
                 ))}
+                <article className="metric-card">
+                  <p>Total round trip</p>
+                  <strong>{result.selected.total_rtt_ms.toFixed(2)} ms</strong>
+                  <small>{result.selected.propagation_rtt_ms.toFixed(2)} ms from {distance} km at 5 µs/km</small>
+                </article>
+                <article className="metric-card">
+                  <p>Link utilization</p>
+                  <strong>{result.selected.link_utilization_percent.toFixed(1)}%</strong>
+                  <small>{frequency} × {writeSize} KB writes on {bandwidth} Mbps</small>
+                </article>
               </div>
               <article className="panel data-panel">
                 <div className="panel-heading"><div><p className="eyebrow">Replication comparison</p><h2>Response and lag</h2></div></div>
                 <div className="layout-table-wrap">
                   <table className="layout-table backup-table">
-                    <thead><tr><th>Mode</th><th>Write response</th><th>Replication lag</th><th>Data-loss window</th></tr></thead>
-                    <tbody>{result.comparison.map((item) => <tr key={item.mode}><td><strong>{item.mode}</strong></td><td>{item.response_ms.toFixed(2)} ms</td><td>{item.lag_ms.toFixed(2)} ms</td><td>{item.data_loss}</td></tr>)}</tbody>
+                    <thead><tr><th>Mode</th><th>Write response</th><th>Replication lag</th><th>RPO</th><th>Data-loss window</th></tr></thead>
+                    <tbody>{result.comparison.map((item) => <tr key={item.mode}><td><strong>{item.mode}</strong></td><td>{item.response_ms.toFixed(2)} ms</td><td>{item.lag_ms.toFixed(2)} ms</td><td>{item.rpo_ms.toFixed(2)} ms</td><td>{item.data_loss}</td></tr>)}</tbody>
                   </table>
                 </div>
               </article>

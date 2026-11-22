@@ -5,7 +5,7 @@ const modules = [
   {
     path: '/raid',
     title: 'RAID Simulator',
-    description: 'Capacity, fault tolerance, layouts, failures, XOR recovery, and rebuild estimates.',
+    description: 'Capacity and write penalty calculator, plus a live array that stripes a real file, fails disks, rebuilds onto a hot spare, and verifies SHA-256.',
     icon: HardDrive,
   },
   {
@@ -23,7 +23,7 @@ const modules = [
   {
     path: '/replication',
     title: 'Replication',
-    description: 'Compare synchronous acknowledgement and asynchronous replication lag.',
+    description: 'Compare synchronous and asynchronous replication: write response, distance delay, lag, and RPO.',
     icon: Waypoints,
   },
   {

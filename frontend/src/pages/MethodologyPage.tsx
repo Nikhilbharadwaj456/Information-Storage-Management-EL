@@ -12,12 +12,17 @@ export function MethodologyPage() {
         <article className="panel methodology-card">
           <p className="eyebrow">RAID</p>
           <h2>Capacity and fault tolerance</h2>
-          <p>Usable capacity is calculated for RAID 0, 1, 5, 6, and 10. Mirror-pair and distributed-parity failures determine degraded or failed states.</p>
+          <p>Usable capacity, efficiency, and write penalty (1, 2, 4, 6, 2 back-end I/Os per write) are calculated for RAID 0, 1, 5, 6, and 10. Mirror-pair and distributed-parity failures determine degraded or failed states. Rebuild time = data to rebuild / rebuild throughput.</p>
+        </article>
+        <article className="panel methodology-card">
+          <p className="eyebrow">RAID live array</p>
+          <h2>Block-level striping and parity</h2>
+          <p>An uploaded file is split into stripe units and written to one file per disk. RAID 5 stores rotating XOR parity. RAID 6 adds a Reed–Solomon Q parity over GF(2⁸), so any two lost blocks in a stripe can be solved. Failing a disk deletes its file; reads and hot-spare rebuilds reconstruct the data, and SHA-256 proves the result matches the original.</p>
         </article>
         <article className="panel methodology-card">
           <p className="eyebrow">Disk performance</p>
           <h2>Latency and queueing</h2>
-          <p>The model combines seek, rotational latency, and transfer time, then applies a simplified M/M/1 response-time equation and Little's Law.</p>
+          <p>Service time = seek + rotational latency (30000 / RPM ms) + transfer time. Utilization U = arrival rate × service time. The M/M/1 model gives response time Ts / (1 − U), queue length U² / (1 − U), and Little's Law N = λ × R. Response time rises sharply past about 70% utilization.</p>
         </article>
         <article className="panel methodology-card">
           <p className="eyebrow">Backup</p>
@@ -27,7 +32,7 @@ export function MethodologyPage() {
         <article className="panel methodology-card">
           <p className="eyebrow">Replication</p>
           <h2>Acknowledgement assumptions</h2>
-          <p>Synchronous writes include network round-trip time. Asynchronous writes are acknowledged locally, with replication lag estimated separately.</p>
+          <p>Round trip = network latency + 2 × distance × 5 µs/km. Synchronous writes wait for that round trip (RPO = 0). Asynchronous writes are acknowledged locally; their lag (and RPO) is the one-way delay plus queued transmission time on the replication link.</p>
         </article>
         <article className="panel methodology-card">
           <p className="eyebrow">Risk</p>

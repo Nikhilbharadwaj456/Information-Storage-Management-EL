@@ -25,3 +25,10 @@ def test_littles_law_and_response_curve():
     curve = response_time_curve(result["service_time_ms"])
     assert len(curve) == 91
     assert curve["Average response time (ms)"].iloc[-1] > curve["Average response time (ms)"].iloc[0]
+
+
+def test_queue_length_formula():
+    from modules.disk_performance import calculate_disk
+    result = calculate_disk(7200, 4, 150, 4, 100)
+    u = result["utilization"]
+    assert result["queue_length"] == pytest.approx(u ** 2 / (1 - u))

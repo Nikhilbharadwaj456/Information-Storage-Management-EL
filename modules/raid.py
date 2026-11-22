@@ -2,6 +2,7 @@ from __future__ import annotations
 
 
 MIN_DISKS = {"RAID 0": 2, "RAID 1": 2, "RAID 5": 3, "RAID 6": 4, "RAID 10": 4}
+WRITE_PENALTY = {"RAID 0": 1, "RAID 1": 2, "RAID 5": 4, "RAID 6": 6, "RAID 10": 2}
 
 
 def calculate_raid(raid_level: str, disk_count: int, disk_size_tb: float) -> dict:
@@ -47,12 +48,48 @@ def calculate_raid(raid_level: str, disk_count: int, disk_size_tb: float) -> dic
         "read_performance": read_level,
         "write_performance": write_level,
         "characteristic": characteristic,
+        "write_penalty": WRITE_PENALTY[raid_level],
     }
 
 
 def xor_recover(a: int, b: int, c: int) -> tuple[int, int, int]:
     parity = a ^ b ^ c
     return parity, c, parity ^ a ^ b
+
+
+def xor_demo(blocks: dict[str, int], missing: str) -> dict:
+    """Compute XOR parity of the blocks, then rebuild the missing one from parity and the survivors."""
+    if missing not in blocks:
+        raise ValueError("The missing block must be one of the data blocks.")
+    parity = 0
+    for value in blocks.values():
+        parity ^= value
+    recovered = parity
+    for name, value in blocks.items():
+        if name != missing:
+            recovered ^= value
+    return {
+        "parity": parity,
+        "missing": missing,
+        "recovered": recovered,
+        "original": blocks[missing],
+        "verified": recovered == blocks[missing],
+    }
+
+
+def remaining_fault_tolerance(raid_level: str, disk_count: int, failed_disks: set[int]) -> str:
+    """Describe how many further disk failures the array can survive."""
+    state = array_state(raid_level, disk_count, failed_disks)
+    if state == "Failed" or raid_level == "RAID 0":
+        return "0 disks"
+    if raid_level in ("RAID 5", "RAID 6"):
+        remaining = (1 if raid_level == "RAID 5" else 2) - len(failed_disks)
+        return f"{remaining} disk{'' if remaining == 1 else 's'}"
+    pairs = [(disk, disk + 1) for disk in range(0, disk_count, 2)]
+    intact = sum(1 for a, b in pairs if a not in failed_disks and b not in failed_disks)
+    if failed_disks:
+        return f"Only disks in the {intact} fully intact mirror pair(s)"
+    return f"1 disk guaranteed; up to {len(pairs)} if each is in a different mirror pair"
 
 
 def rebuild_time(data_tb: float, rebuild_throughput_mb_s: float) -> float:
@@ -132,7 +169,7 @@ def build_layout(raid_level: str, disk_count: int, failed_disks: set[int] | None
     return pd.DataFrame(rows)
 
 
-def _raid_comparison(disk_count: int, disk_size_tb: float) -> pd.DataFrame:
+def raid_comparison(disk_count: int, disk_size_tb: float) -> pd.DataFrame:
     import pandas as pd
 
     records = []
@@ -145,6 +182,7 @@ def _raid_comparison(disk_count: int, disk_size_tb: float) -> pd.DataFrame:
                 "Efficiency (%)": result["efficiency_percent"],
                 "Fault Tolerance": str(result["fault_tolerance"]),
                 "Characteristic": result["characteristic"],
+                "Write penalty": result["write_penalty"],
             })
         except ValueError:
             continue
@@ -184,7 +222,7 @@ def show_raid() -> None:
 
         st.subheader("Disk layout")
         layout = build_layout(raid_level, int(disk_count), failed)
-        st.dataframe(layout, use_container_width=True)
+        st.dataframe(layout, width="stretch")
 
         failure_col, action_col = st.columns([2, 1])
         selectable = [disk for disk in range(int(disk_count)) if disk not in failed]
@@ -200,13 +238,15 @@ def show_raid() -> None:
             st.rerun()
 
         state = array_state(raid_level, int(disk_count), failed)
-        if hot_spare and failed and state in ("Degraded", "Failed"):
+        if hot_spare and failed and state == "Degraded":
             state = "Rebuilding"
         st.subheader("Failure and rebuild status")
         st.metric("System state", state)
         st.write(f"Failed disks: {len(failed)}")
 
-        if hot_spare and failed:
+        if state == "Failed":
+            st.error("Data is not accessible: more disks failed than this RAID level tolerates. A hot spare cannot rebuild lost data.")
+        elif hot_spare and failed:
             rebuild_hours = rebuild_time(float(disk_size), read_speed)
             st.success(f"Hot spare activated. Reconstruction estimated at {rebuild_hours:.2f} hours.")
         else:
@@ -214,11 +254,11 @@ def show_raid() -> None:
             st.caption(f"Rebuild estimate with no spare: {rebuild_hours:.2f} hours.")
 
         st.subheader("RAID comparison")
-        comparison = _raid_comparison(int(disk_count), float(disk_size))
-        st.dataframe(comparison, use_container_width=True)
+        comparison = raid_comparison(int(disk_count), float(disk_size))
+        st.dataframe(comparison, width="stretch")
         fig = px.bar(comparison, x="RAID", y="Efficiency (%)", color="Characteristic",
                      title="Storage Efficiency Comparison")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         if raid_level == "RAID 5":
             st.subheader("RAID 5 XOR parity recovery")

@@ -83,8 +83,15 @@ def replication_explanation(selected: dict, mode: str) -> dict:
         summary = "Asynchronous replication acknowledges locally first, giving faster write response but allowing a replication lag."
     return {
         "summary": summary,
-        "formula": "Synchronous response = local write + network RTT; asynchronous response = local write; asynchronous lag = RTT + transfer-window estimate.",
+        "formula": (
+            "Total RTT = network RTT + 2 x distance x 5 us/km; transmit time = write size / bandwidth; "
+            "synchronous response = local write + total RTT; asynchronous response = local write; "
+            "asynchronous lag = RTT / 2 + transmit time / (1 - link utilization)."
+        ),
         "contributing_factors": [
+            f"Distance adds {selected['propagation_rtt_ms']:.2f} ms of propagation delay per round trip.",
+            f"Total round trip is {selected['total_rtt_ms']:.2f} ms and the replication link is "
+            f"{selected['link_utilization_percent']:.1f}% utilized.",
             f"Selected write response: {selected['response_ms']:.2f} ms.",
             f"Selected replication lag: {selected['lag_ms']:.2f} ms.",
             selected["data_loss"],

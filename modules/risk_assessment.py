@@ -55,6 +55,6 @@ def show_risk() -> None:
             "Impact": impact,
             "Score": score,
             "Category": category,
-        }]), use_container_width=True)
+        }]), width="stretch")
     except ValueError as exc:
         st.error(str(exc))
