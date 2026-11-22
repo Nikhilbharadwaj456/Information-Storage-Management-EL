@@ -147,7 +147,6 @@ SQLite is used locally and in Docker. SQLAlchemy models can also be configured f
 ```text
 app.py                 Streamlit prototype
 modules/               Calculation modules (raid_engine.py is the live block-level RAID engine)
-utils/                 Shared calculations and service adapter
 backend/app/           FastAPI API, database, and schemas
 backend/tests/         API and scenario tests
 frontend/src/          React application

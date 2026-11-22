@@ -9,7 +9,6 @@ from modules.raid import (
     rebuild_time,
     remaining_fault_tolerance,
     xor_demo,
-    xor_recover,
 )
 from modules.explainability import raid_explanation
 
@@ -82,19 +81,6 @@ async def simulate_failure(request: RaidFailureRequest) -> dict:
             request.disk_count,
             failed,
         ).to_dict(orient="records"),
-        "xor_example": {
-            "a": "1010",
-            "b": "1100",
-            "c": "0110",
-            "parity": format(
-                xor_recover(0b1010, 0b1100, 0b0110)[0],
-                "04b",
-            ),
-            "recovered_c": format(
-                xor_recover(0b1010, 0b1100, 0b0110)[2],
-                "04b",
-            ),
-        },
         "explanation": raid_explanation(
             base,
             "Rebuilding" if rebuilding else state,

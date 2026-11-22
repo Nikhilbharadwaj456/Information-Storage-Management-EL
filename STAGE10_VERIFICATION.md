@@ -6,7 +6,7 @@ Verification date: 2026-11-22
 
 - FastAPI health endpoint: healthy
 - React frontend: HTTP 200, production build successful, TypeScript check clean
-- Python tests (calculations, live RAID engine, API): 65 passed
+- Python tests (calculations, live RAID engine, API): 62 passed
 - Frontend component tests: 11 passed
 - Streamlit interface: all six pages load without errors
 - API documentation: available at `/docs`

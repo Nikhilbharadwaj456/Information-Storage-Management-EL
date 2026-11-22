@@ -6,7 +6,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY modules ./modules
-COPY utils ./utils
 COPY backend ./backend
 
 RUN mkdir -p /app/data

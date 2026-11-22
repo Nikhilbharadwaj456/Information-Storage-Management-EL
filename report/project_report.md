@@ -90,7 +90,7 @@ Screenshots of every page are in `screenshots/`: home, RAID calculator, RAID liv
 
 ## 13. Testing and Validation
 
-Pytest covers RAID capacity, invalid configurations, failure states, write penalty, XOR recovery, rebuild time, disk formulas, queue length, queue stability, backup storage, RPO/RTO fields, replication distance and lag units, link saturation, risk scores, and the API. The live RAID engine tests write and read back a file at every level, fail every tolerated combination of disks (for RAID 6, every pair), rebuild onto hot spares, and require a matching SHA-256; they also check that failures beyond tolerance are reported as data loss and that each RAID 5 parity block equals the XOR of its data blocks. Vitest covers the React pages. All 65 Python tests and 11 frontend tests pass.
+Pytest covers RAID capacity, invalid configurations, failure states, write penalty, XOR recovery, rebuild time, disk formulas, queue length, queue stability, backup storage, RPO/RTO fields, replication distance and lag units, link saturation, risk scores, and the API. The live RAID engine tests write and read back a file at every level, fail every tolerated combination of disks (for RAID 6, every pair), rebuild onto hot spares, and require a matching SHA-256; they also check that failures beyond tolerance are reported as data loss and that each RAID 5 parity block equals the XOR of its data blocks. Vitest covers the React pages. All 62 Python tests and 11 frontend tests pass.
 
 ## 14. Limitations
 
