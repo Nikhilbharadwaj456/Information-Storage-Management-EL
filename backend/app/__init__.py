@@ -1,0 +1,1 @@
+"""StorageLab FastAPI application."""
